@@ -1,16 +1,4 @@
-import Text.Parsec(char, digit, letter, alphaNum, spaces, parse, string)
---import Text.Parsec.Char
-import Text.ParserCombinators.Parsec(try)
-import Text.ParserCombinators.Parsec.Char
-import Text.Parsec.Combinator
-import Text.Parsec.Error
-import Text.Parsec.String
-import Text.Parsec.Token
-import Text.Parsec.Expr(Operator, Operator(Infix), Assoc(AssocLeft), buildExpressionParser)
-import Control.Applicative(Applicative, many, (<$>), (<*>), (<|>), (<*), (<$), (*>))
---import Control.Monad(join)
-import Data.Char
-import Data.Functor.Identity(Identity)
+import Text.Parsec
 import qualified Data.Map.Strict as M
 
 import Test_Parser
@@ -18,9 +6,12 @@ import Test_Interpret
 import Test_Types
 
 main :: IO()
-main = do 
-	ex <- interpret example
-	print'' ex
+main = do
+	line <- getLine
+	win line
+	main
+--	ex <- interpret example
+--	print'' ex
 	--print $ interpret example
 
 	--mainLoop
@@ -42,4 +33,4 @@ example = "$a = 2 * 3 + 1\n$c = 14\nif 1 then $b = 2 else $a = 1\nif 1 then if 3
 ex2 :: String
 ex2 = "$a = 1 $b = 3 $d = 5 12 42"
 
-win x = pp x >> putStrLn "\n" >> rr x
+win x = pp x >> putStrLn "_____________" >> rr x

@@ -9,6 +9,11 @@ data Expression = Val   Value
                 | Plus  Expression Expression
                 | Minus Expression Expression
                 | Mult  Expression Expression
+                | GTe    Expression Expression
+                | GEe    Expression Expression
+                | LTe    Expression Expression
+                | LEe    Expression Expression
+                | EQe    Expression Expression
                 | Cmd   String [String]
                   deriving (Show)
                 --TODO : | Div   Expression Expression
@@ -27,6 +32,18 @@ data Value  = VBool Bool
 
 type VarTable = M.Map String Value
 
+instance Eq Value where
+  (==) (VFloat a) (VFloat b) = a == b
+  (==) (VBool a) (VBool b) = a == b
+  (==) (VString a) (VString b) = a == b
+  (==) _ _ = error "Invalid equality test!!"
+
+instance Ord Value where
+  compare (VFloat a) (VFloat b) = compare a b
+  compare (VBool  a) (VBool  b) = compare a b
+  compare (VString a) (VString b) = compare a b
+  compare _ _ = error "Invalid comparison!!"
+
 instance Num Value where
     (+) (VFloat a) (VFloat b) = VFloat $ a + b
     (+) _ _ = error "Invalid operation on val (+)"
@@ -36,25 +53,4 @@ instance Num Value where
     abs _ = error "Invalid operation on val (abs)"
     signum (VFloat a)   = VFloat $ signum a
     signum _ = error "Invalid operation on val (signum)"
---    fromInteger (VFloat a) = error "No bueno" --VFloat $ fromInteger a
     fromInteger _ = error "Invalid operation on val (fromInteger)"
-
-{-instance Convert Bool where
-  toValue = VBool
-  fromValue (VBool a) = a
-  fromValue _ = error "Looking for bool but received something else!"
-
-instance Convert Float where
-  toValue = VFloat
-  fromValue (VFloat a) = a
-  fromValue _ = error "Looking for float but received something else!"
-
-instance Convert [Char] where
-  toValue = VString
-  fromValue (VString a) = a
-  fromValue _ = error "Looking for string but received something else!"
-
-
-class Convert a where
-    toValue :: a -> Value
-    fromValue :: Value -> a-}

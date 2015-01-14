@@ -1,14 +1,10 @@
 module Test_Interpret where
 
-import Text.Parsec(char, digit, letter, alphaNum, spaces, parse, string)
---import Text.Parsec.Char
-import Text.ParserCombinators.Parsec(try)
-import Text.ParserCombinators.Parsec.Char
-import Text.Parsec.Combinator
-import Text.Parsec.Error
+import Text.Parsec.Expr
 import Text.Parsec.String
-import Text.Parsec.Expr(Operator, Operator(Infix), Assoc(AssocLeft), buildExpressionParser)
-import Control.Applicative(Applicative, many, (<$>), (<*>), (<|>), (<*), (<$), (*>))
+import Text.ParserCombinators.Parsec
+
+import Control.Applicative hiding ((<|>),many)
 import Control.Monad(join)
 import Data.Char
 import Data.Functor.Identity(Identity)
@@ -22,21 +18,20 @@ eval :: VarTable -> Expression -> IO Value
 eval vt e = case e of 
   (Val   v)   -> return v
   (Var   v)   -> return $ fromJust $ M.lookup v vt
-  (Plus  a b) -> eval vt a >>= \aa -> eval vt b >>= \bb -> return $ (+) aa bb
-  (Minus a b) -> eval vt a >>= \aa -> eval vt b >>= \bb -> return $ (-) aa bb
-  (Mult  a b) -> eval vt a >>= \aa -> eval vt b >>= \bb -> return $ (*) aa bb
-                      --(Div   a b) -> eval vt a >>= \aa -> eval vt b >>= \bb -> return $ (/) aa bb
-            {-where
-              liftVal :: Convert a => (a -> a -> a) -> Value -> Value -> Value
-              liftVal f v1 v2 = toValue $ f (fromValue v1) (fromValue v2)
-              
-              liftVal f (VBool a) (VBool b) = VBool $ f a b
-              liftVal f (VFloat a) (VFloat b) = VFloat $ f a b
-              liftVal f (VString a) (VString b) = VString $ f a b
-              liftVal _ _ _ = VUnit-}
+  (Plus  a b) -> fly (+) a b
+  (Minus a b) -> fly (-) a b
+  (Mult  a b) -> fly (*) a b
+  (GTe    a b) -> fly2 (>) a b
+  (GEe    a b) -> fly2 (>=) a b
+  (LTe    a b) -> fly2 (<) a b
+  (LEe    a b) -> fly2 (<=) a b
+  (EQe    a b) -> fly2 (==) a b
+  where 
+    fly f a b = eval vt a >>= \aa -> eval vt b >>= \bb -> return $ f aa bb
+    fly2 f a b = VBool <$> fly f a b
 
 makeStatement :: Statement -> VarTable -> IO VarTable
-makeStatement (Exp exp) vt = eval vt exp >> return vt
+makeStatement (Exp exp) vt = eval vt exp >>= print >> return vt
 makeStatement (If cond stmt) vt = do
     c <- eval vt cond
     case c of
@@ -56,10 +51,8 @@ run = run' M.empty
     where 
       run' vt (s:stat) = makeStatement s vt >>= flip run' stat
       run' vt [] = return vt
--- foldl :: (a -> b -> a) -> a -> [b] -> a
--- join :: Monad m => m (m a) -> m a
 
 interpret :: String -> IO VarTable
 interpret s = case parse (many1 statement) "error" s of 
-                Left  _ -> error "interpret error" -- TODO: figure out
+                Left  e -> error $ show e -- TODO: figure out
                 Right p -> run   p
