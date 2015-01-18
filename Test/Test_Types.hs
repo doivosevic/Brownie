@@ -25,7 +25,9 @@ data Expression = Val   Value
 data Statement = Assignment String Expression
                | If Expression Statement
                | IfElse Expression Statement Statement
+               | While Expression Statement
                | Exp Expression
+               | Seq [Statement]
                 deriving (Show)
 
 data Value  = VBool Bool
@@ -57,4 +59,5 @@ instance Num Value where
     abs _ = error "Invalid operation on val (abs)"
     signum (VDouble a)   = VDouble $ signum a
     signum _ = error "Invalid operation on val (signum)"
-    fromInteger _ = error "Invalid operation on val (fromInteger)"
+    negate (VDouble a) = (VDouble (-a))
+    negate (VBool a) = (VBool (not a))

@@ -7,15 +7,6 @@ Extra points may be given for especially creative or elegant solutions.
 
 
 B2. (6 pts) Conditional branching – if-then-else(-fi)
-The conditional branching has to support at least a single if and a single if-else pair. 
-You do not have to implement both numeric (>, <, . . . ) and string (-eq, -gt, ...) comparison.
-You may pick only one. Furthermore, you do not have to support nested if-then-else statements.
-Example (your syntax may be different):
-if $a > 9000 then
-	echo "It’s over 9000!";
-else
-	echo "It’s too low.";
-fi
 
 
 B3. (3 pts) Basic file manipulation commands mv (move), cp (copy), rm (remove), create.

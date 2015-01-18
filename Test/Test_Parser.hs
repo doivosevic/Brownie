@@ -23,6 +23,8 @@ languageDef =
                                           , "else"
                                           , "fi"
                                           , "while"
+                                          , "do"
+                                          , "od"
                                           , "true"
                                           , "false"
                                           , "not"
@@ -49,6 +51,7 @@ float           = Token.float       lexer
 integer         = Token.integer     lexer
 semi            = Token.semi        lexer
 whiteSpace      = Token.whiteSpace  lexer
+symbol          = Token.symbol      lexer
 
 -- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 -- :::::::::::::::::::::::::::::: STATEMENT PARSERS :::::::::::::::::::::::::::
@@ -64,11 +67,18 @@ parseIfElse = IfElse <$> (reservedOp "if" *> expression)
                         <*> (reservedOp "then" *> statement) 
                         <*> (reservedOp "else" *> statement <* reservedOp "fi")
 
+parseWhile :: Parser Statement
+parseWhile = While <$> (reservedOp "while" *> expression)
+                        <*> (reservedOp "do" *> statement <* reservedOp "od")
+
+parseSeq :: Parser Statement
+parseSeq = Seq <$> between (symbol "{") (symbol "}") (many1 statement)
+
 nakedExpression :: Parser Statement
 nakedExpression = Exp <$> expression <* reservedOp ";"
 
 statement :: Parser Statement
-statement = try parseIfElse <|> parseIf <|> try assignment <|> nakedExpression
+statement = parseSeq <|> parseWhile <|> try parseIfElse <|> parseIf <|> try assignment <|> nakedExpression
 
 -- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 -- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -89,7 +99,7 @@ expression = buildExpressionParser table other
     where other = cmd  <|> val <|> stri <|> var
 
 var  = Var <$> variable
-val  = Val <$> VDouble <$> (try float <|> fromIntegral <$> integer)
+val  = Val <$> VDouble <$> (try float <|> fromInteger <$> integer)
 stri = Val <$> VString <$> stringLiteral
 
 cmd = do
