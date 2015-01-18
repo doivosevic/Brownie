@@ -1,66 +1,98 @@
 module Test_Parser where
 
-import Text.Parsec.String
-import Text.Parsec.Expr
-import Text.ParserCombinators.Parsec
+import Control.Monad
 import Control.Applicative hiding ((<|>),many)
+import Text.ParserCombinators.Parsec
+import Text.ParserCombinators.Parsec.Expr
+import Text.ParserCombinators.Parsec.Language
+import qualified Text.ParserCombinators.Parsec.Token as Token
+
 import Data.Char
 import Data.Functor.Identity(Identity)
 
 import Test_Types
 
-infixr 5 <:>
-(<:>) :: Applicative f => f a -> f [a] -> f [a] 
-a <:> b = (:) <$> a <*> b
+languageDef =
+    emptyDef { Token.commentStart       = "/*"
+             , Token.commentEnd         = "*/"
+             , Token.commentLine        = "//"
+             , Token.identStart         = letter
+             , Token.identLetter        = alphaNum
+             , Token.reservedNames      = [ "if"
+                                          , "then"
+                                          , "else"
+                                          , "fi"
+                                          , "while"
+                                          , "true"
+                                          , "false"
+                                          , "not"
+                                          , "and"
+                                          , "or" 
+                                          ]
+             , Token.reservedOpNames    = [ "+", "-", "*", "=", ";", "$"
+                                          , ">", "<", "<=", ">=", "=="
+                                          , "and", "or", "not"
+                                          ]
+            }
 
-sisp :: String -> Parser String
-sisp str = spaces *> string str <* spaces
+lexer = Token.makeTokenParser languageDef
 
--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
--- :::::::::::::::::::::::::::::: STATEMENT PARSERS :::::::::::::::::::::::::
+identifier      = Token.identifier  lexer
+variable        = reservedOp "$" *> identifier
+
+reserved        = Token.reserved    lexer
+reservedOp      = Token.reservedOp  lexer
+parens          = Token.parens      lexer
+stringLiteral   = Token.stringLiteral lexer
+
+float           = Token.float       lexer
+integer         = Token.integer     lexer
+semi            = Token.semi        lexer
+whiteSpace      = Token.whiteSpace  lexer
+
+-- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+-- :::::::::::::::::::::::::::::: STATEMENT PARSERS :::::::::::::::::::::::::::
 assignment :: Parser Statement
-assignment = Assignment <$> (sisp "$" *> varP) <*> (sisp "=" *> expression)
+assignment = Assignment <$> variable <*> (reservedOp "=" *> expression <* reservedOp ";")
 
 parseIf :: Parser Statement
-parseIf = If <$> (sisp "if " *> expression) <*> (sisp "then " *> statement <* sisp "fi")
+parseIf = If <$> (reservedOp "if" *> expression) 
+                <*> (reservedOp "then" *> statement <* reservedOp "fi")
 
 parseIfElse :: Parser Statement
-parseIfElse = IfElse <$> (sisp "if " *> expression) <*> (sisp "then " *> statement) <*> (sisp "else " *> statement <* sisp "fi")
+parseIfElse = IfElse <$> (reservedOp "if" *> expression) 
+                        <*> (reservedOp "then" *> statement) 
+                        <*> (reservedOp "else" *> statement <* reservedOp "fi")
 
 nakedExpression :: Parser Statement
-nakedExpression = Exp <$> expression
+nakedExpression = Exp <$> expression <* reservedOp ";"
 
 statement :: Parser Statement
-statement = try parseIfElse <|> parseIf <|> assignment <|> nakedExpression
+statement = try parseIfElse <|> parseIf <|> try assignment <|> nakedExpression
 
--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+-- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+-- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-table :: [[Operator String () Identity Expression]]
-table =  	[[binary "*" Mult]
-			,[binary "+" Plus, binary "-" Minus]
-			,[binary ">" GTe, binary ">=" GEe, binary "<" LTe, binary "<=" LEe]
-			,[binary "==" EQe]]
-	where binary name f = Infix (f <$ sisp name) AssocLeft
+--table :: [[Operator String () Identity Expression]]
+table :: [[Operator Char st Expression]]
+table =     [[binary "*" Mult]
+            ,[binary "+" Plus, binary "-" Minus]
+            ,[binary ">" GTe, binary ">=" GEe, binary "<" LTe, binary "<=" LEe]
+            ,[binary "==" EQe]]
+    where binary name f = Infix (f <$ reservedOp name) AssocLeft
         --, binary "/" Div MISSING!! TODO...
 
--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
--- ::::::::::::::::::::::::::::: EXPRESSION PARSERS :::::::::::::::::::::::::
+-- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+-- ::::::::::::::::::::::::::::: EXPRESSION PARSERS :::::::::::::::::::::::::::
 expression :: Parser Expression
 expression = buildExpressionParser table other
-    where other = var <|> val <|> stri
-          var  = Var <$> varP
-          val  = Val <$> VFloat <$> (posP <|> negP)
-          stri = Val <$> VString <$> strP
+    where other = cmd  <|> val <|> stri <|> var
 
-varP :: Parser String
-varP = (<* spaces) $ letter <:> many alphaNum
+var  = Var <$> variable
+val  = Val <$> VDouble <$> (try float <|> fromIntegral <$> integer)
+stri = Val <$> VString <$> stringLiteral
 
-posP :: Parser Float
-posP = (<* spaces) $ read <$> many1 digit
-
-negP :: Parser Float
-negP = (<* spaces) $ read <$> char '-' <:> many1 digit
-
-strP :: Parser String
-strP = between (char '"' :: Parser Char) (char '"' :: Parser Char) (many1 $ noneOf "\"")
+cmd = do
+    name <- identifier :: Parser String
+    args <- many $ noneOf ";"
+    return $ Cmd name $ words $ args
