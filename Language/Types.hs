@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
+module Language.Types where
 
-module Test_Types where
 
 import qualified Data.Map.Strict as M
 

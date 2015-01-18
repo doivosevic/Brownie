@@ -1,3 +1,16 @@
--- A map of (command name, command pairs), used to abstract command
--- execution and make adding new commands relatively easy
-commands :: Data.Map String Command
+module Language.Commands where
+
+import Data.Char
+import Data.List
+import Language.Types
+
+execute :: InterpreterState -> String -> [String] -> IO (Value, CWD)
+execute (vt, cwd) cmdName cmdArgs = case map toUpper cmdName of
+  "CD"  -> cmdCD cmdArgs cwd
+  _     -> return (VDouble 1.0, cwd)
+
+cmdCD cmdArgs cwd = case head cmdArgs of
+  ".." -> case elemIndices '/' cwd of
+            []  -> return (VDouble 0, cwd)
+            arr -> return (VDouble 1, take (last arr) cwd)
+  _    -> return (VDouble 1, cwd)

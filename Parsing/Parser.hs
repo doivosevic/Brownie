@@ -1,4 +1,4 @@
-module Test_Parser where
+module Parsing.Parser where
 
 import Control.Monad
 import Control.Applicative hiding ((<|>),many)
@@ -10,7 +10,7 @@ import qualified Text.ParserCombinators.Parsec.Token as Token
 import Data.Char
 import Data.Functor.Identity(Identity)
 
-import Test_Types
+import Language.Types
 
 languageDef =
     emptyDef { Token.commentStart       = "/*"

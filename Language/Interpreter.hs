@@ -1,4 +1,4 @@
-module Test_Interpret where
+module Language.Interpreter where
 
 import Text.Parsec.Expr
 import Text.Parsec.String
@@ -12,8 +12,9 @@ import Data.Maybe
 import Data.List
 import qualified Data.Map.Strict as M
 
-import Test_Parser
-import Test_Types
+import Parsing.Parser
+import Language.Types
+import Language.Commands
 
 eval :: InterpreterState -> Expression -> IO (Value, CWD)
 eval state@(vt, cwd) e = case e of
