@@ -33,7 +33,7 @@ languageDef =
                                           ]
              , Token.reservedOpNames    = [ "+", "-", "*", "=", ";", "$"
                                           , ">", "<", "<=", ">=", "=="
-                                          , "and", "or", "not"
+                                          , "and", "or", "not" , "\n"
                                           ]
             }
 
@@ -75,7 +75,7 @@ parseSeq :: Parser Statement
 parseSeq = Seq <$> between (symbol "{") (symbol "}") (many1 statement)
 
 nakedExpression :: Parser Statement
-nakedExpression = Exp <$> expression <* reservedOp ";"
+nakedExpression = Exp <$> expression <* oneOf ";\n"
 
 statement :: Parser Statement
 statement = parseSeq <|> parseWhile <|> try parseIfElse <|> parseIf <|> try assignment <|> nakedExpression
@@ -104,5 +104,5 @@ stri = Val <$> VString <$> stringLiteral
 
 cmd = do
     name <- identifier :: Parser String
-    args <- many $ noneOf ";"
+    args <- many $ noneOf ";\n"
     return $ Cmd name $ words $ args

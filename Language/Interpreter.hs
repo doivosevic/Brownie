@@ -40,38 +40,26 @@ makeStatement (Exp exp) state@(vt, cwd) = eval state exp >>= \(val, newCwd) -> p
 -- IF STATEMENT
 makeStatement (If cond stmt) state@(vt, cwd) = do
     (c, newCwd) <- eval state cond
-    case c of
-      VBool True -> makeStatement stmt (vt, newCwd)
-      VDouble f   -> if f /= 0 then makeStatement stmt (vt, newCwd) else return (vt, newCwd)
-      _          -> return (vt, newCwd)
+    if isTrue c then makeStatement stmt (vt, newCwd) else return (vt, newCwd)
 -- IFELSE STATEMENT
 makeStatement (IfElse cond stmt1 stmt2) state@(vt, cwd) = do
     (c, newCwd) <- eval state cond
-    case c of
-      VBool b      -> if b      then makeStatement stmt1 (vt, newCwd) else makeStatement stmt2 (vt, newCwd)
-      VDouble f    -> if f /= 0 then makeStatement stmt1 (vt, newCwd) else makeStatement stmt2 (vt, newCwd)
-      _            -> makeStatement stmt2 (vt, newCwd)
+    if isTrue c then makeStatement stmt1 (vt, newCwd) else makeStatement stmt2 (vt, newCwd)
 -- WHILE STATEMENT
 makeStatement (While cond stmt) state@(vt, cwd) = do
     (c, newCwd) <- eval state cond
-    case c of
-      VBool True -> makeStatement (Seq [stmt, (While cond stmt)]) (vt, newCwd)
-      VDouble f   -> if f /= 0 then makeStatement (Seq [stmt, (While cond stmt)]) (vt, newCwd) else return (vt, newCwd)
-      _          -> return (vt, newCwd)
+    if isTrue c then makeStatement (Seq [stmt, (While cond stmt)]) (vt, newCwd) else return (vt, newCwd)
 -- ASSIGNMENT STATEMENT
-makeStatement (Assignment var exp) state@(vt, cwd) = eval state exp >>= \(res, newCwd) -> return (M.insert var res vt, newCwd)
+makeStatement (Assignment var exp) state@(vt, cwd) = do
+    (res, newCwd) <-eval state exp
+    return (M.insert var res vt, newCwd)
 -- SEQ STATEMENT
 makeStatement (Seq []) state = return state
-makeStatement (Seq (s:stmts)) state = do
-    newState <- makeStatement s state
-    makeStatement (Seq stmts) newState
+makeStatement (Seq (s:stmts)) state = makeStatement s state >>= makeStatement (Seq stmts)
 
 run :: InterpreterState -> [Statement] -> IO InterpreterState
 run state (s:stat) = makeStatement s state >>= flip run stat
 run state [] = return state
 
-interpret :: InterpreterState -> String -> IO InterpreterState
-interpret state s = case parse (many1 statement) "error" s of 
-                Left  e -> error $ show e -- TODO: figure out
-                Right p -> run state p
-
+interpret :: InterpreterState -> String -> IO (Either ParseError InterpreterState)
+interpret state = either (return . Left) ((Right <$>) . run state) . parse (many1 statement) "error"

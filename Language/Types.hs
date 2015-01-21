@@ -50,6 +50,14 @@ instance Ord Value where
   compare (VString a) (VString b) = compare a b
   compare _ _ = error "Invalid comparison!!"
 
+isTrue :: Value -> Bool
+isTrue (VDouble a)
+  | a == 0 = False
+  | a == 1 = True
+  | otherwise = error "The number is neither 0 nor 1"
+isTrue (VBool a) = a
+isTrue (VString str) = error "String can not be true of false"
+
 instance Num Value where
     (+) (VDouble a) (VDouble b) = VDouble $ a + b
     (+) _ _ = error "Invalid operation on val (+)"

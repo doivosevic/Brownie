@@ -11,12 +11,6 @@ B2. (6 pts) Conditional branching – if-then-else(-fi)
 
 B3. (3 pts) Basic file manipulation commands mv (move), cp (copy), rm (remove), create.
 They have to support both absolute and relative paths.
-mv src target ⇒ Moves a source file to the target file
-mv src ... directory ⇒ Moves one or more files to a target directory
-cp src target ⇒ Copies a source file to the target file
-cp src ... directory ⇒ Copies one or more files to a target directory
-rm file ... ⇒ Removes one or more files (not directories)
-create file ... ⇒ Creates one or more empty files
 
 
 B4. (3 pts) Basic directory manipulation commands mv (move), cpdir (copy), mkdir (make directory), rmdir (remove directory). 
@@ -30,10 +24,6 @@ rmdir dir ... ⇒ Removes an empty directory
 
 B5. (3 pts) Basic file system navigation commands ls (list directory contents), pwd (print working/current directory), cd (change directory). 
 These commands have to support both absolute and relative paths.
-ls [dir] ⇒ Lists the contents of the given directory, or the current one if no argument is given.
-pwd ⇒ Prints the current directory (working directory)
-cd [dir] ⇒ Changes the working directory to a given one, or the user’s home directory if no argument is given.
-
 
 B6. (5 pts) Stream redirection.
 hash commands have to read from the stdin and write to the stdout by default.
