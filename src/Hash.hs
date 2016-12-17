@@ -14,23 +14,23 @@ import Language.Commands
 -- with the user / reading from file.
 -- Runs a .hash script
 runScript :: FilePath -> IO ()
-runScript fp = 
-	readFile fp >>= interpret (M.empty, fp) >> return ()
+runScript fp =
+  readFile fp >>= interpret (M.empty, fp) >> return ()
 
 -- Communicates with the user and performs hash commands line by line
 runInteractive :: IO ()
-runInteractive = getExecutablePath >>= \path 
-				-> mainLoop (M.empty, takeDirectory path)
+runInteractive = getExecutablePath >>= \path
+  -> mainLoop (M.empty, takeDirectory path)
 
 mainLoop :: InterpreterState -> IO()
 mainLoop state = do
-	putStr (snd state) >> putStr " > " >> hFlush stdout
-	line <- getLine
-	case line of
-		"" -> mainLoop state
-		"*quit" -> return ()
-		_ 		-> do
-					interpreted <- interpret state line	
-					case interpreted of
-						Left err -> print err >> mainLoop state
-						Right newState@(varTable, cwd) -> print varTable >> mainLoop newState
+  putStr (snd state) >> putStr " > " >> hFlush stdout
+  line <- getLine
+  case line of
+    ""        -> mainLoop state
+    "*quit"   -> return ()
+    _         -> do
+      interpreted <- interpret state line
+      case interpreted of
+        Left err -> print err >> mainLoop state
+        Right newState@(varTable, cwd) -> print varTable >> mainLoop newState

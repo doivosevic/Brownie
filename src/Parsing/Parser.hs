@@ -29,7 +29,7 @@ languageDef =
                                           , "false"
                                           , "not"
                                           , "and"
-                                          , "or" 
+                                          , "or"
                                           ]
              , Token.reservedOpNames    = [ "+", "-", "*", "=", ";", "$"
                                           , ">", "<", "<=", ">=", "=="
@@ -59,12 +59,12 @@ assignment :: Parser Statement
 assignment = Assignment <$> variable <*> (reservedOp "=" *> expression <* reservedOp ";")
 
 parseIf :: Parser Statement
-parseIf = If <$> (reservedOp "if" *> expression) 
+parseIf = If <$> (reservedOp "if" *> expression)
                 <*> (reservedOp "then" *> statement <* reservedOp "fi")
 
 parseIfElse :: Parser Statement
-parseIfElse = IfElse <$> (reservedOp "if" *> expression) 
-                        <*> (reservedOp "then" *> statement) 
+parseIfElse = IfElse <$> (reservedOp "if" *> expression)
+                        <*> (reservedOp "then" *> statement)
                         <*> (reservedOp "else" *> statement <* reservedOp "fi")
 
 parseWhile :: Parser Statement
@@ -99,10 +99,10 @@ expression = buildExpressionParser table other
     where other = cmd  <|> val <|> stri <|> var
 
 var  = Var <$> variable
-val  = Val <$> VDouble <$> (try float <|> fromInteger <$> integer)
-stri = Val <$> VString <$> stringLiteral
+val  = Val . VDouble <$> (try float <|> fromInteger <$> integer)
+stri = Val . VString <$> stringLiteral
 
 cmd = do
     name <- identifier :: Parser String
     args <- many $ noneOf ";\n"
-    return $ Cmd name $ words $ args
+    return $ Cmd name $ words args

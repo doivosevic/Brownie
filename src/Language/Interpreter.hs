@@ -20,7 +20,7 @@ eval :: InterpreterState -> Expression -> IO (Value, CWD)
 eval state@(vt, cwd) e = case e of
   (Cmd name args) -> execute state name args
   (Val   v)   -> return (v, cwd)
-  (Var   v)   -> return (fromJust $ M.lookup v $ vt, cwd)
+  (Var   v)   -> return (fromJust $ M.lookup v vt, cwd)
   (Plus  a b) -> fly (+) a b
   (Minus a b) -> fly (-) a b
   (Mult  a b) -> fly (*) a b
@@ -29,7 +29,7 @@ eval state@(vt, cwd) e = case e of
   (LTe    a b) -> fly2 (<) a b
   (LEe    a b) -> fly2 (<=) a b
   (EQe    a b) -> fly2 (==) a b
-  where 
+  where
     fly :: (Value -> Value -> Value) -> Expression -> Expression -> IO (Value, CWD)
     fly f a b  = eval state a >>= \(aa, cwd1) -> eval state b >>= \(bb, cwd2) -> return (f aa bb, cwd2)
     fly2 f a b = eval state a >>= \(aa, cwd1) -> eval state b >>= \(bb, cwd2) -> return (VBool (f aa bb), cwd2)
@@ -48,7 +48,7 @@ makeStatement (IfElse cond stmt1 stmt2) state@(vt, cwd) = do
 -- WHILE STATEMENT
 makeStatement (While cond stmt) state@(vt, cwd) = do
     (c, newCwd) <- eval state cond
-    if isTrue c then makeStatement (Seq [stmt, (While cond stmt)]) (vt, newCwd) else return (vt, newCwd)
+    if isTrue c then makeStatement (Seq [stmt, While cond stmt]) (vt, newCwd) else return (vt, newCwd)
 -- ASSIGNMENT STATEMENT
 makeStatement (Assignment var exp) state@(vt, cwd) = do
     (res, newCwd) <-eval state exp
