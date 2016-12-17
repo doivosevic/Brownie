@@ -67,5 +67,6 @@ instance Num Value where
     abs _ = error "Invalid operation on val (abs)"
     signum (VDouble a)   = VDouble $ signum a
     signum _ = error "Invalid operation on val (signum)"
-    negate (VDouble a) = (VDouble (-a))
-    negate (VBool a) = (VBool (not a))
+    negate (VDouble a) = VDouble (-a)
+    negate (VBool a) = VBool (not a)
+    fromInteger a = VDouble $ fromInteger a

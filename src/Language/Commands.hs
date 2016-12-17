@@ -39,39 +39,38 @@ toAbsolute fp cwd = if isAbsolute fp then fp else combine cwd fp
 
 cmdMV :: Args -> CWD -> IO (Value, CWD)
 cmdMV [] cwd = return (VBool False, cwd)
-cmdMV paths cwd = flip mapM (init paths) (flip renameFile target . flip toAbsolute cwd) 
-	>> return (VBool True, cwd)
-	where target = toAbsolute (last paths) cwd
+cmdMV paths cwd = flip mapM (init paths) (flip renameFile target . flip toAbsolute cwd)
+  >> return (VBool True, cwd)
+  where target = toAbsolute (last paths) cwd
 
 cmdCP :: Args -> CWD -> IO (Value, CWD)
 cmdCP [] cwd = return (VBool False, cwd)
 cmdCP [path] cwd = cmdCP [] cwd
-cmdCP [source, target] cwd = print (toAbsolute source cwd) >> print (toAbsolute target cwd) >> 
-	copyFile (toAbsolute source cwd) (toAbsolute target cwd) 
-	>> return (VBool True, cwd)
-cmdCP list cwd = 
-	flip mapM (init list) (flip cmdCP (toAbsolute (last list) cwd) . return)
-	>> return (VBool True, cwd)
+cmdCP [source, target] cwd = print (toAbsolute source cwd) >> print (toAbsolute target cwd) >>
+  copyFile (toAbsolute source cwd) (toAbsolute target cwd)
+  >> return (VBool True, cwd)
+cmdCP list cwd =
+  flip mapM (init list) (flip cmdCP (toAbsolute (last list) cwd) . return)
+  >> return (VBool True, cwd)
 
 cmdRM :: Args -> CWD -> IO (Value, CWD)
 cmdRM [] cwd = return (VBool False, cwd)
 cmdRM list cwd = flip mapM list (removeFile . flip toAbsolute cwd)
-	>> return (VBool True, cwd)
+  >> return (VBool True, cwd)
 
 ------
 cmdCREATAE :: Args -> CWD -> IO (Value, CWD)
 cmdCREATAE [] cwd = return (VBool False, cwd)
 cmdCREATAE list cwd = flip mapM list (createDirectory . flip toAbsolute cwd)
-	>> return (VBool True, cwd)
+  >> return (VBool True, cwd)
 
 cmdECHO :: Args -> VarTable -> CWD -> IO (Value, CWD)
 cmdECHO [str] vt cwd = print (unwords v2) >> return (VDouble 1, cwd)
-	where
-		str2 = if length str > 3 then init . tail $ str else str
-		v2 = map envar $ words str2
-		envar (w:wrd) = if w == '$' then (extract (fromJust (M.lookup wrd vt))) else (w:wrd)
-		envar wrd = wrd
-		extract (VDouble a) = show a
-		extract (VBool a) = show a
-		extract (VString a) = a
-
+  where
+  str2 = if length str > 3 then init . tail $ str else str
+  v2 = map envar $ words str2
+  envar (w:wrd) = if w == '$' then (extract (fromJust (M.lookup wrd vt))) else (w:wrd)
+  envar wrd = wrd
+  extract (VDouble a) = show a
+  extract (VBool a) = show a
+  extract (VString a) = a
