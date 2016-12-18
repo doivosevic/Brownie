@@ -19,8 +19,9 @@ runScript fp =
 
 -- Communicates with the user and performs hash commands line by line
 runInteractive :: IO ()
-runInteractive = getExecutablePath >>= \path
-  -> mainLoop (M.empty, takeDirectory path)
+runInteractive = do
+  path <- getExecutablePath
+  mainLoop (M.empty, takeDirectory path)
 
 mainLoop :: InterpreterState -> IO()
 mainLoop state = do

@@ -13,13 +13,13 @@ data Expression = Val   Value
                 | Plus  Expression Expression
                 | Minus Expression Expression
                 | Mult  Expression Expression
-                | GTe    Expression Expression
-                | GEe    Expression Expression
-                | LTe    Expression Expression
-                | LEe    Expression Expression
-                | EQe    Expression Expression
+                | GTe   Expression Expression
+                | GEe   Expression Expression
+                | LTe   Expression Expression
+                | LEe   Expression Expression
+                | EQe   Expression Expression
                 | Cmd   String [String]
-                  deriving (Show)
+                  deriving (Show, Eq)
                 --TODO : | Div   Expression Expression
 
 data Statement = Assignment String Expression
@@ -28,27 +28,15 @@ data Statement = Assignment String Expression
                | While Expression Statement
                | Exp Expression
                | Seq [Statement]
-                deriving (Show)
+                deriving (Show, Eq)
 
 data Value  = VBool Bool
             | VDouble Double
             | VString String
             | VUnit
-            deriving (Show)
+            deriving (Show, Eq, Ord)
 
 type VarTable = M.Map String Value
-
-instance Eq Value where
-  (==) (VDouble a) (VDouble b) = a == b
-  (==) (VBool a) (VBool b) = a == b
-  (==) (VString a) (VString b) = a == b
-  (==) _ _ = error "Invalid equality test!!"
-
-instance Ord Value where
-  compare (VDouble a) (VDouble b) = compare a b
-  compare (VBool  a) (VBool  b) = compare a b
-  compare (VString a) (VString b) = compare a b
-  compare _ _ = error "Invalid comparison!!"
 
 isTrue :: Value -> Bool
 isTrue (VDouble a)
