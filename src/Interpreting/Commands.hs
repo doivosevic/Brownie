@@ -1,10 +1,10 @@
-module Language.Commands where
+module Interpreting.Commands where
 
 import Data.Char
 import Data.List
 import Control.Monad
 import Control.Applicative
-import Language.Types
+import Base.Types
 import System.FilePath.Posix
 import System.Directory
 import Data.Maybe

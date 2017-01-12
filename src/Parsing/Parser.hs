@@ -2,42 +2,15 @@ module Parsing.Parser where
 
 import Control.Monad
 import Control.Applicative hiding ((<|>),many)
-import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Expr
-import Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token as Token
+import Text.ParserCombinators.Parsec
 
 import Data.Char
 import Data.Functor.Identity(Identity)
 
-import Language.Types
-
-languageDef =
-    emptyDef { Token.commentStart       = "/*"
-             , Token.commentEnd         = "*/"
-             , Token.commentLine        = "//"
-             , Token.identStart         = letter
-             , Token.identLetter        = alphaNum
-             , Token.reservedNames      = [ "if"
-                                          , "then"
-                                          , "else"
-                                          , "fi"
-                                          , "while"
-                                          , "do"
-                                          , "od"
-                                          , "true"
-                                          , "false"
-                                          , "not"
-                                          , "and"
-                                          , "or"
-                                          ]
-             , Token.reservedOpNames    = [ "+", "-", "*", "=", ";", "$"
-                                          , ">", "<", "<=", ">=", "=="
-                                          , "and", "or", "not" , "\n"
-                                          ]
-            }
-
-lexer = Token.makeTokenParser languageDef
+import Base.Types
+import Parsing.Lexer
 
 identifier      = Token.identifier  lexer
 variable        = reservedOp "$" *> identifier

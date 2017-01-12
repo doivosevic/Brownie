@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
-module Language.Types where
+module Base.Types where
 
 
 import qualified Data.Map.Strict as M

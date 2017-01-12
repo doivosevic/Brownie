@@ -1,6 +1,6 @@
 import TestUtilities.TestUtilities
-import Language.Interpreter
-import Language.Types
+import Interpreting.Interpreter
+import Base.Types
 import Data.Map.Strict
 
 main :: IO ()

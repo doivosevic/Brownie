@@ -1,4 +1,4 @@
-module Language.Interpreter where
+module Interpreting.Interpreter where
 
 import Text.Parsec.Expr
 import Text.Parsec.String
@@ -13,8 +13,8 @@ import Data.List
 import qualified Data.Map.Strict as M
 
 import Parsing.Parser
-import Language.Types
-import Language.Commands
+import Base.Types
+import Interpreting.Commands
 
 eval :: InterpreterState -> Expression -> IO (Value, CWD)
 eval state@(vt, cwd) e = case e of

@@ -1,7 +1,7 @@
 module TestUtilities.TestUtilities where
 
-import Language.Types
-import Language.Interpreter
+import Base.Types
+import Interpreting.Interpreter
 import qualified Data.Map.Strict as M
 import Text.Parsec hiding (parseTest)
 import Parsing.Parser

@@ -6,9 +6,9 @@ import System.IO
 import qualified Data.Map.Strict as M
 
 import Parsing.Parser
-import Language.Interpreter
-import Language.Types
-import Language.Commands
+import Interpreting.Interpreter
+import Base.Types
+import Interpreting.Commands
 
 -- The top-level module. Connects parsing to execution and adds interaction
 -- with the user / reading from file.

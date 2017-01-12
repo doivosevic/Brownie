@@ -16,10 +16,11 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Hash
-                       Language.Commands
-                       Language.Interpreter
-                       Language.Types
+                       Interpreting.Commands
+                       Interpreting.Interpreter
+                       Base.Types
                        Parsing.Parser
+                       Parsing.Lexer
                        TestUtilities.TestUtilities
   build-depends:       base >= 4.7 && < 5
                      , containers
