@@ -20,13 +20,12 @@ library
                        Interpreting.Interpreter
                        Base.Types
                        Parsing.Parser
-                       Parsing.Lexer
                        TestUtilities.TestUtilities
   build-depends:       base >= 4.7 && < 5
                      , containers
                      , filepath
                      , directory
-                     , parsec
+                     , megaparsec
   default-language:    Haskell2010
 
 executable brownie-exe

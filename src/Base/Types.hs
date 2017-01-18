@@ -1,7 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Base.Types where
 
-
 import qualified Data.Map.Strict as M
 
 type InterpreterState = (VarTable, CWD)

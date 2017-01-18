@@ -1,30 +1,57 @@
 module Parsing.Parser where
-
-import Control.Monad
-import Control.Applicative hiding ((<|>),many)
-import Text.ParserCombinators.Parsec.Expr
-import qualified Text.ParserCombinators.Parsec.Token as Token
-import Text.ParserCombinators.Parsec
-
-import Data.Char
-import Data.Functor.Identity(Identity)
-
+import Control.Monad (void)
+import Text.Megaparsec
+import Text.Megaparsec.Expr
+import Text.Megaparsec.String -- input stream is of type ‘String’
+import qualified Text.Megaparsec.Lexer as L
 import Base.Types
-import Parsing.Lexer
 
-identifier      = Token.identifier  lexer
+sc :: Parser ()
+sc = L.space (void spaceChar) lineCmnt blockCmnt
+  where lineCmnt = L.skipLineComment "//"
+        blockCmnt = L.skipBlockComment "/*" "*/"
+
+lexeme :: Parser a -> Parser a
+lexeme = L.lexeme sc
+
+symbol :: String -> Parser String
+symbol = L.symbol sc
+
+parens :: Parser a -> Parser a
+parens = between (symbol "(") (symbol ")")
+
+integer :: Parser Integer
+integer = lexeme L.integer
+
+float :: Parser Double
+float = lexeme L.float
+
+--stringLiteral :: Parser String
+--stringLiteral = lexeme L.
+
+semi :: Parser String
+semi = symbol ";"
+
+reservedOp :: String -> Parser ()
+reservedOp w = string w *> sc
+
+rws = ["if", "then", "else", "fi", "while", "do"
+      ,"od", "true", "false", "not", "and", "or"
+      ,"+", "-", "*", "=", ";", "$"
+      , ">", "<", "<=", ">=", "==", "\n"]
+
+identifier :: Parser String
+identifier = (lexeme . try) (p >>= check)
+  where
+    p       = (:) <$> letterChar <*> many alphaNumChar
+    check x = if x `elem` rws
+                then fail $ "keyword " ++ show x ++ " cannot be an identifier"
+                else return x
+
+variable :: Parser String
 variable        = reservedOp "$" *> identifier
 
-reserved        = Token.reserved    lexer
-reservedOp      = Token.reservedOp  lexer
-parens          = Token.parens      lexer
-stringLiteral   = Token.stringLiteral lexer
-
-float           = Token.float       lexer
-integer         = Token.integer     lexer
-semi            = Token.semi        lexer
-whiteSpace      = Token.whiteSpace  lexer
-symbol          = Token.symbol      lexer
+--stringLiteral   = Token.stringLiteral lexer
 
 -- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 -- :::::::::::::::::::::::::::::: STATEMENT PARSERS :::::::::::::::::::::::::::
@@ -45,7 +72,7 @@ parseWhile = While <$> (reservedOp "while" *> expression)
                         <*> (reservedOp "do" *> statement <* reservedOp "od")
 
 parseSeq :: Parser Statement
-parseSeq = Seq <$> between (symbol "{") (symbol "}") (many1 statement)
+parseSeq = Seq <$> between (symbol "{") (symbol "}") (some statement)
 
 nakedExpression :: Parser Statement
 nakedExpression = Exp <$> expression <* oneOf ";\n"
@@ -57,23 +84,23 @@ statement = parseSeq <|> parseWhile <|> try parseIfElse <|> parseIf <|> try assi
 -- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 --table :: [[Operator String () Identity Expression]]
-table :: [[Operator Char st Expression]]
+table :: [[Operator Parser Expression]]
 table =     [[binary "*" Mult]
             ,[binary "+" Plus, binary "-" Minus]
             ,[binary ">" GTe, binary ">=" GEe, binary "<" LTe, binary "<=" LEe]
             ,[binary "==" EQe]]
-    where binary name f = Infix (f <$ reservedOp name) AssocLeft
+    where binary name f = InfixL (f <$ reservedOp name)
         --, binary "/" Div MISSING!! TODO...
 
 -- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 -- ::::::::::::::::::::::::::::: EXPRESSION PARSERS :::::::::::::::::::::::::::
 expression :: Parser Expression
-expression = buildExpressionParser table other
-    where other = cmd  <|> val <|> stri <|> var
+expression = makeExprParser other table
+    where other = cmd  <|> val <|> var-- <|> stri
 
 var  = Var <$> variable
 val  = Val . VDouble <$> (try float <|> fromInteger <$> integer)
-stri = Val . VString <$> stringLiteral
+--stri = Val . VString <$> stringLiteral
 
 cmd = do
     name <- identifier :: Parser String

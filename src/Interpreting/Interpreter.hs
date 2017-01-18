@@ -1,9 +1,5 @@
 module Interpreting.Interpreter where
 
-import Text.Parsec.Expr
-import Text.Parsec.String
-import Text.ParserCombinators.Parsec
-
 import Control.Applicative hiding ((<|>),many)
 import Control.Monad(join)
 import Data.Char
@@ -15,6 +11,8 @@ import qualified Data.Map.Strict as M
 import Parsing.Parser
 import Base.Types
 import Interpreting.Commands
+
+import Text.Megaparsec
 
 eval :: InterpreterState -> Expression -> IO (Value, CWD)
 eval state@(vt, cwd) e = case e of
@@ -61,5 +59,5 @@ run :: InterpreterState -> [Statement] -> IO InterpreterState
 run state (s:stat) = makeStatement s state >>= flip run stat
 run state [] = return state
 
-interpret :: InterpreterState -> String -> IO (Either ParseError InterpreterState)
-interpret state = either (return . Left) ((Right <$>) . run state) . parse (many1 statement) "error"
+interpret :: InterpreterState -> String -> IO (Either (ParseError Char Dec) InterpreterState)
+interpret state = either (return . Left) ((Right <$>) . run state) . parse (some statement) "error"
